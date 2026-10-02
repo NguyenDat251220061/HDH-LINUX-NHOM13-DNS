@@ -1,0 +1,27 @@
+$TTL 86400
+
+
+
+@  IN  SOA  ns1.lab.test. admin.lab.test. (
+
+            2026100201
+
+            3600
+
+            900
+
+            604800
+
+            86400 )
+
+
+
+@   IN  NS  ns1.lab.test.
+
+@   IN  NS  ns2.lab.test.
+
+
+
+10  IN  PTR ns1.lab.test.
+
+11  IN  PTR ns2.lab.test.
