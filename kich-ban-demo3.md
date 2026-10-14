@@ -27,17 +27,20 @@ Bố cục màn hình:
 > *"Kính chào thầy cô và các bạn, em là Nguyễn Minh Trọng, đại diện thành viên N4. Hôm nay em xin demo phần 3: Tích hợp Client DNS và Web Server nội bộ.  
 > Ở hai phần trước, nhóm đã hoàn thành cấu hình Primary DNS trên máy ns1 và Secondary DNS trên máy ns2. Trong phần này, em sẽ đóng vai trò Client trên máy ns2, chứng minh quá trình phân giải tên miền truy cập vào Web Server được đặt tại máy ns1, giải thích cơ chế ưu tiên giữa file hosts và DNS, và chứng minh tính năng DNS Caching."*
 
-⌨️ **Thao tác trên Terminal PHẢI (`ns2`):**
+⌨️ **Thao tác trên Terminal:**
 ```bash
-# 1. Kiểm tra IP Client
+# 1. Kiểm tra IP Web Server (ns1)
 ip -br a
-
-# 2. Ping kiểm tra thông mạng với Web Server ns1
+# 2. Kiểm tra IP Client (ns2)
+ip -br a
+# 3. Ping kiểm tra kết nối với Web Server (ns1)
 ping -c 3 192.168.56.10
+# 4. Ping kiểm tra kết nối với Client (ns2)
+ping -c 3 192.168.56.11
 ```
 
 🗣️ **Lời thoại:**
-> *"Trước tiên, máy Client ns2 có IP là 192.168.56.11 trên card enp0s8 và ping tới Web Server 192.168.56.10 hoàn toàn thông suốt với 0% packet loss."*
+> *"Như thầy cô thấy, máy ns2 có IP là 192.168.56.11 trên card enp0s8 và ping tới Web Server 192.168.56.10 và Client 192.168.56.11 đều hoàn toàn thông suốt với 0% packet loss."*
 
 ---
 
@@ -62,7 +65,7 @@ resolvectl status enp0s8 | grep "DNS Servers"
 dig www.lab.test +short
 
 # Truy vấn CNAME Record
-dig web.lab.test +short
+dig www.lab.test +short
 
 # Truy vấn Reverse DNS (PTR)
 dig -x 192.168.56.10 +short
@@ -102,8 +105,16 @@ grep hosts /etc/nsswitch.conf
 ⌨️ **Thao tác trên Terminal PHẢI (`ns2`):**
 ```bash
 # Thêm bản ghi giả mạo
-echo "192.168.56.99 www.lab.test" | sudo tee -a /etc/hosts
+sudo nano /etc/hosts
+```
+👉 *Màn hình hiện nội dung file `/etc/hosts`.*
+```
+# Thêm vào file `/etc/hosts` dòng sau:
+192.168.56.99 www.lab.test
+```
 
+⌨️ **Thao tác trên Terminal PHẢI (`ns2`):**
+```bash
 # Kiểm tra lại file hosts
 cat /etc/hosts | grep lab.test
 ```
@@ -138,8 +149,12 @@ dig @192.168.56.10 www.lab.test +short
 ⌨️ **Thao tác trên Terminal PHẢI (`ns2`):**
 ```bash
 # Xóa bản ghi giả mạo
-sudo sed -i '/192.168.56.99/d' /etc/hosts
+sudo nano /etc/hosts
+```
+👉 *Xóa dòng `192.168.56.99 www.lab.test`.* 
 
+⌨️ **Thao tác trên Terminal PHẢI (`ns2`):**
+```bash
 # Kiểm tra lại curl
 curl http://www.lab.test
 ```
@@ -155,7 +170,7 @@ curl http://www.lab.test
 ⌨️ **Thao tác trên Terminal PHẢI (`ns2`):**
 ```bash
 # 1. Xóa sạch bộ nhớ đệm
-sudo resolvectl flush-caches
+resolvectl flush-caches
 
 # 2. Xem thống kê ban đầu
 resolvectl statistics
